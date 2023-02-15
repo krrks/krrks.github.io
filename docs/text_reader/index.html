@@ -4,12 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <link rel="shortcut icon" href="https://c.s-microsoft.com/favicon.ico?v2" />
-    <link rel="stylesheet" href="./converter.css">
+    <link rel="stylesheet" href="./txt_reader.css">
     <link rel="manifest" href="./manifest.json">
-    <title>Temperature converter</title>
+    <title>Txt reader</title>
   </head>
   <body>
-    <form id="converter">
+    <form id="txt_reader">
       <label for="input-temp">temperature</label>
       <input type="text" id="input-temp" name="input-temp" value="20" />
       <label for="input-unit">from</label>
@@ -26,7 +26,7 @@
       </select>
       <output name="output-temp" id="output-temp" for="input-temp input-unit output-unit">68 F</output>
     </form>
-    <script src="./converter.js"></script>
+    <script src="./txt_reader.js"></script>
     <script>
       if('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js', { scope: './' });
