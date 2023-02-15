@@ -1,4 +1,4 @@
-const CACHE_NAME = `temperature-converter-v1`;
+const CACHE_NAME = `txt-reader-v1`;
     
 // Use the install event to pre-cache all initial resources.
 self.addEventListener('install', event => {
@@ -6,8 +6,8 @@ self.addEventListener('install', event => {
     const cache = await caches.open(CACHE_NAME);
     cache.addAll([
       './',
-      './converter.js',
-      './converter.css'
+      './txt_reader.js',
+      './txt_reader.css'
     ]);
   })());
 });
