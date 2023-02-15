@@ -14,7 +14,7 @@ body {
   place-items: center;
 }
 
-#converter {
+#txt_reader {
   width: 15rem;
   padding: 2rem;
   border-radius: .5rem;
@@ -24,7 +24,7 @@ body {
   align-items: center;
 }
 
-#converter input, #converter select {
+#txt_reader input, #txt_reader select {
   font-family: inherit;
   font-size: inherit;
   margin-block-end: 1rem;
@@ -32,7 +32,7 @@ body {
   width: 10rem;
 }
 
-#converter #output-temp {
+#txt_reader #output-temp {
   font-size: 2rem;
   font-weight: bold;
 }
