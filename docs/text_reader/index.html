@@ -1,36 +1,148 @@
 <!DOCTYPE html>
 <html lang="en-US" dir="ltr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <link rel="shortcut icon" href="https://c.s-microsoft.com/favicon.ico?v2" />
-    <link rel="stylesheet" href="./txt_reader.css">
-    <link rel="manifest" href="./manifest.json">
-    <title>Txt reader</title>
-  </head>
-  <body>
-    <form id="txt_reader">
-      <label for="input-temp">temperature</label>
-      <input type="text" id="input-temp" name="input-temp" value="20" />
-      <label for="input-unit">from</label>
-      <select id="input-unit" name="input-unit">
-        <option value="c" selected>Celsius</option>
-        <option value="f">Fahrenheit</option>
-        <option value="k">Kelvin</option>
-      </select>
-      <label for="output-unit">to</label>
-      <select id="output-unit" name="output-unit">
-        <option value="c">Celsius</option>
-        <option value="f" selected>Fahrenheit</option>
-        <option value="k">Kelvin</option>
-      </select>
-      <output name="output-temp" id="output-temp" for="input-temp input-unit output-unit">68 F</output>
-    </form>
-    <script src="./txt_reader.js"></script>
-    <script>
-      if('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js', { scope: './' });
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="shortcut icon" href="https://c.s-microsoft.com/favicon.ico?v2" />
+  <link rel="stylesheet" href="./txt_reader.css">
+  <link rel="manifest" href="./manifest.json">
+  <title>Txt reader</title>
+</head>
+
+<body>
+
+  <!-- <script src="./txt_reader.js"></script> -->
+  <!-- 
+  <input type="file" name="file" id="filePicker" onchange="show()" />
+  <br> -->
+
+  <textarea id="story" name="story" rows="15" cols="60">
+  </textarea>
+
+  <!-- <script src="./txt_reader.js"></script> -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js', { scope: './' });
+    }
+  </script>
+
+  <input type="file" id="file" />
+  <button id="get-txt">Get Text</button>
+
+  <script src="./js/txt-reader.min.js"></script>
+
+  <script>
+    document.getElementById('get-txt').onclick = function () {
+      let file = document.getElementById('file').files[0];
+      let start_time = Date.now()
+      txt_file_hdl(file)
+      console.log('time: ' + String(Date.now()-start_time))
+    }
+    function txt_file_hdl(file) {
+      var reader = new TxtReader();
+
+      reader.sniffLines(file, 5)
+        .progress(function (progress) {
+          console.log('>>>>>>Sniffing lines progress: ' + progress + '%');
+        })
+        .then(function (response) {
+          console.log('The first five lines are: ', response.result);
+        })
+        .catch(function (reason) {
+          console.log('sniffLines failed with error: ' + reason);
+        });
+
+      reader.loadFile(file)
+        .progress(function (progress) {
+          console.log('>>>>>>Loading file progress: ' + progress + '%');
+        })
+        .then(function (response) {
+          console.log('Loading file completed in ' + response.timeTaken + 'ms, total lines: ' + response.result.lineCount);
+          exectueAfterLoadFileComplete();
+        })
+        .catch(function (reason) {
+          console.log('Loading file failed with error: ' + reason);
+        });
+
+      function exectueAfterLoadFileComplete() {
+        reader.getLines(10, 10)
+          .progress(function (progress) {
+            console.log('>>>>>>Getting lines progress: ' + progress + '%');
+          })
+          .then(function (response) {
+            console.log('Lines are: ', response.result);
+          })
+          .catch(function (reason) {
+            console.log('Getting lines failed with error: ' + reason);
+          });
+
+        reader.iterateLines({
+          eachLine: function (raw, progress, lineNumber) {
+            if (this.contains2018(raw)) {
+              this.count++;
+              this.result.push([lineNumber,this.decode(raw)])
+            }
+          },
+          scope: {
+            count: 0,
+            result:[],
+            contains2018: function (raw) {
+              return this.decode(raw).indexOf('【') > -1;
+            }
+          }
+        })
+          .progress(function (progress) {
+            console.log('>>>>>>Iterating lines progress: ' + progress + '%');
+          })
+          .then(function (response) {
+            console.log(response.result.count + ' lines contain "【"-');
+            console.log('they are: ', response.result)
+          })
+          .catch(function (reason) {
+            console.log('Iterating lines failed with error: ' + reason);
+          });
+
+        reader.getSporadicLines([1, { start: 10, end: 15 }])
+          .progress(function (progress) {
+            console.log('>>>>>>Getting lines 1, 10~15 progress: ' + progress + '%');
+          })
+          .then(function (response) {
+            console.log('Line 1 is: ' + response.result[0].value);
+            console.log('Line 15 is: ' + response.result[response.result.length - 1].value);
+          })
+          .catch(function (reason) {
+            console.log('Getting lines 1, 10~15 failed with error: ' + reason);
+          });
+
+        reader.iterateSporadicLines({
+          eachLine: function (raw, progress, lineNumber) {
+            if (this.contains2018(raw)) {
+              this.count++;
+            }
+          },
+          scope: {
+            count: 0,
+            contains2018: function (raw) {
+              return this.decode(raw).indexOf('【') > -1;
+            }
+          }
+        }, [1, { start: 10, end: 100 }])
+          .progress(function (progress) {
+            console.log('>>>>>>Getting lines 1, 10~100 progress: ' + progress + '%');
+          })
+          .then(function (response) {
+            console.log(response.result.count + ' lines contain "【"');
+          })
+          .catch(function (reason) {
+            console.log('Getting lines 1, 10~100 failed with error: ' + reason);
+          });
       }
-    </script>
-  </body>
+
+      reader.utf8decoder.decode(new Uint8Array(['a'.charCodeAt(0)])) === 'a' // true
+    }
+  </script>
+
+</body>
+
 </html>
