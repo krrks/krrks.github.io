@@ -4,8 +4,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="shortcut icon" href="https://c.s-microsoft.com/favicon.ico?v2" />
+  <link rel="shortcut icon" href="./icon/favicon.ico" />
   <link rel="stylesheet" href="./txt_reader.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   <link rel="manifest" href="./manifest.json">
   <title>Txt reader</title>
 </head>
@@ -16,38 +17,164 @@
   <!-- 
   <input type="file" name="file" id="filePicker" onchange="show()" />
   <br> -->
+  <div style="width:100%;height:100%;margin: 0 auto;">
+    
+    <textarea id="story" name="story" readonly="readonly" disabled="disabled"
+      style="position:fixed;top:1%;left:1%; width:98%;height:98%;resize:none;overflow:hidden;">
+    </textarea>
 
-  <textarea id="story" name="story" rows="15" cols="60">
-  </textarea>
+    <div class="dropdown">
+      <button onclick="myFunction()" class="dropbtn">Dropdown</button>
+      <div id="myDropdown" class="dropdown-content">
+        <a href="#home">Home</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+        <input type="file" id="file" />
+      </div>
+    </div>
 
-  <!-- <script src="./txt_reader.js"></script> -->
+    <div id="progress_bar">
+      <div id="progress_slot"></div>
+    </div>
+  </div>
+  <style>
+    #progress_bar {
+      height: 10px;
+      width: 100%;
+      background: gainsboro
+    }
+
+    #progress_slot {
+      transition: all 0.5s;
+      background: lightslategray;
+      height: 100%;
+    }
+  </style>
+  <!-- ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
+
+  <style>
+    .dropbtn {
+      background-color: #04AA6D;
+      color: white;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+      height: 64px;
+      width: 64px;
+      border-radius: 50%;
+      opacity: 21%;
+    }
+
+    .dropbtn:hover,
+    .dropbtn:focus {
+      background-color: #3e8e41;
+    }
+
+    .dropdown {
+      position:relative;
+      top:5%;
+      left:2%;
+      float: left;
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: #f1f1f1;
+      min-width: 160px;
+      overflow: auto;
+      box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+      left: 0;
+      z-index: 1;
+    }
+
+    .dropdown-content a {
+      color: black;
+      padding: 12px 16px;
+      text-decoration: none;
+      display: block;
+    }
+
+    .dropdown a:hover {
+      background-color: #ddd;
+    }
+
+    .show {
+      display: block;
+    }
+  </style>
+
+
+  <script>
+    /* When the user clicks on the button, 
+    toggle between hiding and showing the dropdown content */
+    function myFunction() {
+      document.getElementById("myDropdown").classList.toggle("show");
+    }
+
+    // Close the dropdown if the user clicks outside of it
+    window.onclick = function (event) {
+      if (!event.target.matches('.dropbtn')) {
+        var dropdowns = document.getElementsByClassName("dropdown-content");
+        var i;
+        for (i = 0; i < dropdowns.length; i++) {
+          var openDropdown = dropdowns[i];
+          if (openDropdown.classList.contains('show')) {
+            openDropdown.classList.remove('show');
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- <script src="./txt_reader.js"></script> ////////////////////////////////////////////////////////////////////////////-->
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js', { scope: './' });
     }
   </script>
 
-  <input type="file" id="file" />
-  <button id="get-txt">Get Text</button>
+
 
   <script src="./js/txt-reader.min.js"></script>
 
   <script>
-    document.getElementById('get-txt').onclick = function () {
+    if (window.localStorage) {
+      console.log(">>>>>>使用本地缓存")
+    } else {
+      console.log(">>>>>>不能使用本地缓存");
+    }
+    console.log('>>>>>>', getIndexDB())
+    function getIndexDB() {
+      const indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB ||
+        window.msIndexedDB || window.shimIndexedDB;
+      if (indexedDB) {
+        return indexedDB
+      }
+      alert(">>>>>>indexedDB not found")
+    }
+
+    document.getElementById('file').onchange = function () {
       let file = document.getElementById('file').files[0];
       let start_time = Date.now()
+      story.value = ''
       txt_file_hdl(file)
-      console.log('time: ' + String(Date.now()-start_time))
+      //console.log('time: ' + String(Date.now()-start_time))
     }
     function txt_file_hdl(file) {
       var reader = new TxtReader();
 
       reader.sniffLines(file, 5)
         .progress(function (progress) {
-          console.log('>>>>>>Sniffing lines progress: ' + progress + '%');
+          //console.log('>>>>>>Sniffing lines progress: ' + progress + '%');
+          progress_slot.style.width = progress + '%'
         })
         .then(function (response) {
-          console.log('The first five lines are: ', response.result);
+          progress_slot.style.width = '0%'
+          //console.log('The first five lines are: ', response.result);
+          story.value = story.value + 'The first five lines are: \r\n' + response.result.join("\r\n") + "\r\n"
         })
         .catch(function (reason) {
           console.log('sniffLines failed with error: ' + reason);
@@ -55,10 +182,13 @@
 
       reader.loadFile(file)
         .progress(function (progress) {
-          console.log('>>>>>>Loading file progress: ' + progress + '%');
+          //console.log('>>>>>>Loading file progress: ' + progress + '%');
+          progress_slot.style.width = progress + '%'
         })
         .then(function (response) {
-          console.log('Loading file completed in ' + response.timeTaken + 'ms, total lines: ' + response.result.lineCount);
+          progress_slot.style.width = '0%'
+          //console.log('Loading file completed in ' + response.timeTaken + 'ms, total lines: ' + response.result.lineCount);
+          story.value = story.value + 'Loading file completed in ' + response.timeTaken + 'ms, total lines: ' + response.result.lineCount
           exectueAfterLoadFileComplete();
         })
         .catch(function (reason) {
@@ -68,10 +198,13 @@
       function exectueAfterLoadFileComplete() {
         reader.getLines(10, 10)
           .progress(function (progress) {
-            console.log('>>>>>>Getting lines progress: ' + progress + '%');
+            //console.log('>>>>>>Getting lines progress: ' + progress + '%');
+            progress_slot.style.width = progress + '%'
           })
           .then(function (response) {
-            console.log('Lines are: ', response.result);
+            progress_slot.style.width = '0%'
+            //console.log('10 - 10 Lines are: ', response.result);
+            story.value = story.value + '10 - 10 Lines are: ' + response.result.join("\r\n") + "\r\n"
           })
           .catch(function (reason) {
             console.log('Getting lines failed with error: ' + reason);
@@ -81,61 +214,32 @@
           eachLine: function (raw, progress, lineNumber) {
             if (this.contains2018(raw)) {
               this.count++;
-              this.result.push([lineNumber,this.decode(raw)])
+              this.result_num.push(lineNumber)
+              this.result_str.push(this.decode(raw))
             }
           },
           scope: {
             count: 0,
-            result:[],
+            result_num: [],
+            result_str: [],
             contains2018: function (raw) {
               return this.decode(raw).indexOf('【') > -1;
             }
           }
         })
           .progress(function (progress) {
-            console.log('>>>>>>Iterating lines progress: ' + progress + '%');
+            //console.log('>>>>>>Iterating lines progress: ' + progress + '%');
+            progress_slot.style.width = progress + '%'
           })
           .then(function (response) {
-            console.log(response.result.count + ' lines contain "【"-');
-            console.log('they are: ', response.result)
+            progress_slot.style.width = '0%'
+            //console.log(response.result.count + ' lines contain "【"-');
+            //console.log('they are: ', response.result.result_str)
+            story.value = story.value + response.result.count + ' lines contain "【"'
+            story.value = story.value + 'they are: ' + response.result.result_str.join("\r\n") + "\r\n"
           })
           .catch(function (reason) {
             console.log('Iterating lines failed with error: ' + reason);
-          });
-
-        reader.getSporadicLines([1, { start: 10, end: 15 }])
-          .progress(function (progress) {
-            console.log('>>>>>>Getting lines 1, 10~15 progress: ' + progress + '%');
-          })
-          .then(function (response) {
-            console.log('Line 1 is: ' + response.result[0].value);
-            console.log('Line 15 is: ' + response.result[response.result.length - 1].value);
-          })
-          .catch(function (reason) {
-            console.log('Getting lines 1, 10~15 failed with error: ' + reason);
-          });
-
-        reader.iterateSporadicLines({
-          eachLine: function (raw, progress, lineNumber) {
-            if (this.contains2018(raw)) {
-              this.count++;
-            }
-          },
-          scope: {
-            count: 0,
-            contains2018: function (raw) {
-              return this.decode(raw).indexOf('【') > -1;
-            }
-          }
-        }, [1, { start: 10, end: 100 }])
-          .progress(function (progress) {
-            console.log('>>>>>>Getting lines 1, 10~100 progress: ' + progress + '%');
-          })
-          .then(function (response) {
-            console.log(response.result.count + ' lines contain "【"');
-          })
-          .catch(function (reason) {
-            console.log('Getting lines 1, 10~100 failed with error: ' + reason);
           });
       }
 
